@@ -156,6 +156,18 @@ a.back{color:var(--sky);text-decoration:none;font-size:14px;font-weight:600}
 .std{font-size:12px;color:var(--muted)}
 body.boardmode .wrap,body.boardmode #title,body.boardmode #won,body.boardmode #homeroom{display:none!important}
 
+/* review gate */
+#review .card.rv{width:min(560px,100%)}
+#review .prob{min-height:0;margin:10px 0}
+#review .answer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+#review .go{background:var(--stink);color:#10200a;border-color:#10200a}
+#rvFig{display:flex;justify-content:center;margin:6px 0}
+#rvFig .fig{width:100%;max-width:300px;height:auto;background:#1b1829;border-radius:10px;border:2px solid var(--edge)}
+#rvFb{min-height:24px;margin-top:8px}
+#rvFb .btn{display:block;margin:10px auto 0}
+.rvbar{display:flex;gap:6px;justify-content:center;margin-top:4px}
+.rvbar i{width:34px;height:12px;border-radius:6px;background:#231f37;border:2px solid var(--edge)}
+.rvbar i.on{background:var(--stink)}
 @keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-2deg) scale(1.02)}75%{transform:rotate(2deg) scale(1.02)}}
 @media (max-width:900px){.game{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
@@ -212,9 +224,23 @@ body.boardmode .wrap,body.boardmode #title,body.boardmode #won,body.boardmode #h
       <div><b>4. Upgrade</b>Every right answer earns beans. Spend beans on stronger toots.</div>
     </div>
     <p>A wrong answer gives a sad little <b>pfft</b>, tells you what went wrong, and that problem comes back later. Fractions can be typed as a fraction (like 7/4) or a mixed number (like 1 3/4). Any equal fraction counts.</p>
-    <p class="std">Pick any room. Rooms 1–2: volume (NC.5.MD.4–5). Rooms 3–4: multiplying fractions and area (NC.5.NF.4). Room 5: dividing with unit fractions (NC.5.NF.7). Room 6: review.</p>
+    <p class="std">Before each room: a 6-problem warm-up review. Get 6 right to open the room. Pick any room. Rooms 1–2: volume (NC.5.MD.4–5). Rooms 3–4: multiplying fractions and area (NC.5.NF.4). Room 5: dividing with unit fractions (NC.5.NF.7). Room 6: review.</p>
     <div class="rooms" id="roomList"></div>
     <div class="row"><button class="btn go" id="bStart" type="button">Enter the room</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="review" hidden>
+  <div class="card rv">
+    <h2>Warm-up review</h2>
+    <p class="std" id="rvRoom"></p>
+    <p>Get <b>6 right</b> to open the room. A wrong answer gets a brand-new problem.</p>
+    <div class="rvbar" id="rvBar"></div><p class="std" id="rvCount"></p>
+    <div class="prob" id="rvProb"></div>
+    <div id="rvFig"></div>
+    <div class="answer" id="rvAns"></div>
+    <div class="fb" id="rvFb" aria-live="polite"></div>
+    <p class="std" id="rvUnit"></p>
   </div>
 </div>
 
@@ -536,6 +562,37 @@ function divStep(){const b=pick(DS),d=pick(DS),a=rnum(b),c=rnum(d);if(a===b-a&&c
     show:`Keep ${a}/${b}, change ÷ to ×, flip ${c}/${d} to ${d}/${c}: ${right}.`,
     why:i=>(notes[choices[i]]||'')+` The right way: keep ${a}/${b}, change ÷ to ×, flip ${c}/${d} to ${d}/${c}.`})}
 
+
+/* ----- order of operations, whole numbers (NC.5.OA.2). Answers are whole numbers; division always comes out even. ----- */
+function pemdas(){
+  const T=[
+    ()=>{const a=ri(2,12),b=ri(2,9),c=ri(2,9);return [`${a} + ${b} × ${c}`,a+b*c,[(a+b)*c,'You added first. Multiply before you add.']]},
+    ()=>{const b=ri(2,9),c=ri(2,9),a=b*c+ri(1,9);return [`${a} − ${b} × ${c}`,a-b*c,[(a-b)*c,'You subtracted first. Multiply before you subtract.']]},
+    ()=>{const a=ri(2,9),b=ri(2,9),c=ri(2,6);return [`(${a} + ${b}) × ${c}`,(a+b)*c,[a+b*c,'Parentheses first! Add inside the ( ) before you multiply.']]},
+    ()=>{const c=ri(2,6),q=ri(2,9),b=ri(2,6),a=q*c*b;return [`${a} ÷ ${b} × ${c}`,a/b*c,[a/(b*c),'Multiply and divide go LEFT to RIGHT. Divide first here, because ÷ comes first.']]},
+    ()=>{const c=ri(2,5),b=c*ri(2,6),a=ri(b/c+1,20),d=ri(1,9);return [`${a} − ${b} ÷ ${c} + ${d}`,a-b/c+d,[(a-b)/c+d,'Divide before you subtract.']]},
+    ()=>{const a=ri(2,6),b=ri(6,12),c=ri(1,b-1),d=ri(2,9);return [`${a} × (${b} − ${c}) + ${d}`,a*(b-c)+d,[a*b-c+d,'Parentheses first! Subtract inside the ( ) first.']]},
+    ()=>{const b=ri(2,5),c=ri(2,5),d=ri(2,4),a=b*c*d;return [`${a} ÷ (${b} × ${c})`,a/(b*c),[a/b*c,'Parentheses first! Multiply inside the ( ), then divide.']]},
+    ()=>{const a=ri(2,9),b=ri(2,9),c=ri(2,9),d=ri(2,5);return [`[${a} + (${b} + ${c})] × ${d}`,(a+b+c)*d,[a+b+c*d,'Work from the inside out: ( ) first, then [ ], then multiply.']]}];
+  for(let k=0;k<50;k++){const [ex,ans,miss]=pick(T)();if(!Number.isInteger(ans)||ans<0||ans>400||miss[0]===ans)continue;
+    return mk({kind:'num',std:'NC.5.OA.2',key:'oo'+ex,ans,html:`<span class="ptxt" style="font-size:24px;text-align:center">${ex}</span>`,text:ex,fig:'',
+      show:`${ex} = ${ans}`,why:g=>noteFrom([{v:miss[0],t:miss[1]}],g)||'Order of operations: ( ) and [ ] first, then × and ÷ left to right, then + and − left to right.'})}
+}
+/* ----- fractions as division (NC.5.NF.3): a ÷ b = a/b, sharing stories ----- */
+function fracQuotient(){const b=pick([2,3,4,5,6,8]),a=ri(1,3*b);if(a%b===0)return fracQuotient();const nm=pick(NAMES);
+  const st=pick([[`${a} pizzas are shared equally by ${b} friends. How much pizza does each friend get?`,'pizzas'],[`${a} cups of juice are poured equally into ${b} glasses. How many cups in each glass?`,'cups'],[`${nm} cuts ${a} feet of ribbon into ${b} equal pieces. How long is each piece?`,'feet']]);
+  const ans=[a,b];
+  return mk({kind:'frac',std:'NC.5.NF.3',key:`fq${a}${b}${st[1]}`,ans,unit:st[1],html:`<span class="ptxt">${st[0]}</span>`,text:`${a} ÷ ${b}`,fig:'',
+    show:`${a} ÷ ${b} = ${frH(a,b)}${valH(a,b)!==frH(a,b)?' = '+valH(a,b):''} ${st[1]}`,
+    why:g=>noteFrom([{v:[b,a],t:`Upside down! The amount shared (${a}) goes on top: ${a} ÷ ${b} = ${a}/${b}.`},{v:[1,b],t:`That is one share of ONE thing. There are ${a} things to share: ${a} ÷ ${b}.`}],g)})}
+/* ----- review mixes by unit (Ms. Tesnar sets the unit in the Sheet's Settings tab). Always one order-of-operations problem. ----- */
+const REVIEW={
+  1:[[volCount,2],[volBox,3],[volBase,2],[volMissing,2],[volComposite,2]],
+  2:[[fracQuotient,4],[wholeTimesFrac,3],[fracOfWhole,3],[wordWhole,2],[fracFrac,2],[areaFrac,2],[volBox,1]],
+  3:[[fracFrac,3],[areaFrac,2],[mixedTimes,2],[scaling,1],[unitDivWhole,1],[wholeDivUnit,1],[fracDivFrac,3],[mixedDivFrac,2],[divWord,2],[wordWhole,1],[fracQuotient,1]]};
+/* problem k of a review: #2 is always order of operations, #1 and #4 are from the room, the rest from the unit */
+function review(unit,room,k){if(k===1)return Object.assign(pemdas(),{again:pemdas});if(k===0||k===3)return gen(room);return pickFrom(REVIEW[unit]||REVIEW[3])}
+
 /* ---------------- rooms ---------------- */
 const ROOM_TOPICS=['Volume: count the cubes','Volume: base × height, missing edge, two boxes','Fraction × whole number','Fraction × fraction and area','Dividing fractions: flip and multiply','Mixed numbers, dividing, scaling and review'];
 const ROOM_STD=['NC.5.MD.4, NC.5.MD.5','NC.5.MD.5','NC.5.NF.4','NC.5.NF.4','NC.5.NF.7 (+ NC.6.NS.1)','NC.5.NF.4, NC.5.NF.7, NC.5.MD.5'];
@@ -546,8 +603,9 @@ const BANK=[
   [[fracFrac,5],[areaFrac,4],[areaWholeFrac,3]],
   [[unitDivWhole,2],[wholeDivUnit,2],[fracDivWhole,2],[wholeDivFrac,2],[fracDivFrac,4],[mixedDivFrac,2],[mixedDivWhole,1],[fracDivMixed,2],[divWord,4],[divStep,2]],
   [[fracDivFrac,3],[mixedDivFrac,2],[fracDivMixed,1],[divWord,2],[wholeDivFrac,1],[mixedTimes,3],[scaling,2],[wordWhole,1],[areaFrac,1],[volComposite,1]]];
-function gen(room){const B=BANK[room-1],tot=B.reduce((s,x)=>s+x[1],0);let r=Math.random()*tot;for(const [f,w] of B){r-=w;if(r<0)return f()}return B[0][0]()}
-return {gen,ROOM_TOPICS,ROOM_STD,BANK,valH,valT,frH,gcd,red,eqv,all:{unitDivWhole,wholeDivUnit,fracDivWhole,wholeDivFrac,fracDivFrac,mixedDivFrac,mixedDivWhole,fracDivMixed,divWord,divStep,volCount,volBox,volBase,volMissing,volComposite,wholeTimesFrac,fracOfWhole,wordWhole,fracFrac,areaFrac,areaWholeFrac,mixedTimes,scaling}};
+function pickFrom(B){const tot=B.reduce((s,x)=>s+x[1],0);let r=Math.random()*tot;for(const [f,w] of B){r-=w;if(r<0){const p=f();p.again=f;return p}}const p=B[0][0]();p.again=B[0][0];return p}
+function gen(room){return pickFrom(BANK[room-1])}
+return {gen,review,REVIEW_UNITS:[1,2,3],pickFrom,ROOM_TOPICS,ROOM_STD,BANK,valH,valT,frH,gcd,red,eqv,all:{pemdas,fracQuotient,unitDivWhole,wholeDivUnit,fracDivWhole,wholeDivFrac,fracDivFrac,mixedDivFrac,mixedDivWhole,fracDivMixed,divWord,divStep,volCount,volBox,volBase,volMissing,volComposite,wholeTimesFrac,fracOfWhole,wordWhole,fracFrac,areaFrac,areaWholeFrac,mixedTimes,scaling}};
 })();
 /*Q5-END*/
 
@@ -1108,7 +1166,8 @@ function refocus(){if(!G)return;
 function flashFb(t,cls){const f=$('#fb');f.className='fb '+(cls||'');f.innerHTML=t}
 function nextQ(){
   const Q=G.q;let p=null;
-  if(Q.queue.length&&Q.queue[0].due<=Q.seen)p=Q.queue.shift().p;
+  /* a missed problem comes back as a NEW problem of the same kind (new numbers): seeing the answer never helps */
+  if(Q.queue.length&&Q.queue[0].due<=Q.seen){const r=Q.queue.shift();try{p=r.again();p.again=r.again}catch(e){p=null}}
   if(!p){for(let k=0;k<20;k++){p=gen(G.n);if(p.key!==Q.lastKey)break}}
   Q.lastKey=p.key;Q.seen++;Q.p=p;Q.stage='main';Q.busy=false;
   if($('#fb').classList.contains('bad'))flashFb('','');   /* the last mistake note was read; start clean */
@@ -1158,7 +1217,7 @@ function right(){
 }
 function wrong(){
   G.wrong++;const Q=G.q,p=Q.p;pfft();
-  if(!p.retry){p.retry=true;Q.queue.push({p,due:Q.seen+3})}
+  if(p.again&&!p.retry){Q.queue.push({again:p.again,due:Q.seen+3})}
   let note='';try{note=p.kind==='choice'?p.why(Q.given):p.why(Q.given.v||Q.given)}catch(e){}
   if(p.kind==='choice'){const b=document.querySelector(`#answer .ch[data-i="${p.ans}"]`);if(b)b.classList.add('yes')}
   flashFb(`pfft. Not quite.${note?`<span class="note">${note}</span>`:''}${p.kind==='choice'?'':`<span class="ans">Answer: ${p.show}</span>`}`,'bad');
@@ -1225,7 +1284,7 @@ $('#bToot').addEventListener('click',()=>{toot();refocus()});
 
 /* ================= keyboard ================= */
 document.addEventListener('keydown',e=>{
-  if(!G||!$('#title').hidden||!$('#won').hidden||!$('#homeroom').hidden)return;
+  if(!G||!$('#title').hidden||!$('#won').hidden||!$('#homeroom').hidden||!$('#review').hidden)return;
   const t=e.target;
   if(e.key==='t'||e.key==='T'){e.preventDefault();if(!e.repeat)toot();return}
   if(e.key==='Escape'&&G.q.stage==='bonus'){e.preventDefault();skipBonus();return}
@@ -1250,7 +1309,7 @@ function renderRooms(){
       ${save.cleared[n]?'<span class="done">Cleared ✓</span>':''}</button>`}).join('');
 }
 $('#roomList').addEventListener('click',e=>{const b=e.target.closest('.rm');if(!b||b.disabled)return;room=+b.dataset.r;renderRooms()});
-function startRoom(n){ac();if(Cup.need()){Cup.ask(()=>startRoom(n));return}$('#title').hidden=true;$('#won').hidden=true;newGame(n)}
+function startRoom(n){ac();if(Cup.need()){Cup.ask(()=>startRoom(n));return}if(Review.need(n)){$('#title').hidden=true;$('#won').hidden=true;Review.run(n,()=>startRoom(n));return}$('#title').hidden=true;$('#won').hidden=true;newGame(n)}
 $('#bStart').addEventListener('click',()=>startRoom(room));
 $('#bRooms').addEventListener('click',()=>{renderRooms();$('#title').hidden=false;$('#bStart').focus()});
 function showWin(){
@@ -1274,7 +1333,7 @@ $('#bWonRooms').addEventListener('click',()=>{$('#won').hidden=true;renderRooms(
    {homeroom, points}. If the server can't be reached, points wait on this Chromebook and are sent later. */
 const Cup=(function(){
   const GS=(()=>{try{return !!(window.google&&google.script&&google.script.run)}catch(e){return false}})();
-  let classes=['Ms. Tesnar','Ms. Covalt'],board=null,sending=false,boardMode=false,failed=0;
+  let reviewU=3,classes=['Ms. Tesnar','Ms. Covalt'],board=null,sending=false,boardMode=false,failed=0;
   /* points not sent yet, per homeroom: {"Ms. Tesnar": 3} */
   let pend={};try{pend=JSON.parse(localStorage.getItem('sc5-pending')||'{}')||{};if(typeof pend!=='object'||Array.isArray(pend)||'h' in pend)pend={}}catch(e){pend={}}
   const savePend=()=>{try{localStorage.setItem('sc5-pending',JSON.stringify(pend))}catch(e){}};
@@ -1292,7 +1351,7 @@ const Cup=(function(){
         if(/unknown homeroom/i.test(String(e&&e.message||e))){delete pend[h];savePend()}
         render()})}
   function refresh(){if(!GS)return;run('getBoard',[],setBoard,()=>{failed++;render()})}
-  function setBoard(b){if(!b||!b.classes)return;board=b;const names=b.classes.map(c=>c.name);if(names.length)classes=names;render()}
+  function setBoard(b){if(!b||!b.classes)return;board=b;if([1,2,3].includes(b.review))reviewU=b.review;const names=b.classes.map(c=>c.name);if(names.length)classes=names;render()}
   /* points shown include this Chromebook's points that are still waiting to be sent */
   function rows(){const list=(board&&board.classes)||classes.map(n=>({name:n,points:0,students:0}));
     return list.map(c=>({name:c.name,points:(+c.points||0)+(pend[c.name]||0),students:+c.students||0}))}
@@ -1322,7 +1381,74 @@ const Cup=(function(){
     /* projector view: the web app link + ?board=1 */
     try{google.script.url.getLocation(loc=>{if(loc&&loc.parameter&&loc.parameter.board){boardMode=true;document.body.classList.add('boardmode');$('#board').hidden=false;render();setInterval(refresh,15000)}})}catch(e){}
   }
-  return {on,home,need,add,flush,ask,start,render};
+  return {on,home,need,add,flush,ask,start,render,reviewUnit:()=>reviewU};
+})();
+
+/* ================= review gate ================= */
+/* REVIEW GATE (Ms. Tesnar, Nov 21, 2026): "they had to get thru the review and then be rewarded with the game".
+   Before a room opens: 6 problems answered CORRECTLY (typed answers). No skip, no Next button.
+   A wrong answer explains the mistake, shows the right answer, then gives a BRAND-NEW problem (new numbers),
+   so seeing an answer never helps. Tap questions shuffle their choices every time.
+   Passing a room's review is remembered for the rest of the day on this Chromebook.
+   The review unit comes from the teacher's Sheet (Settings tab) through Cup; default Unit 3. */
+const Review=(function(){
+  const NEED=6;
+  let R=null;
+  const today=()=>new Date().toISOString().slice(0,10);
+  function unit(){const u=Cup.reviewUnit&&Cup.reviewUnit();return [1,2,3].includes(u)?u:3}
+  function need(n){save.passed=save.passed||{};return save.passed[n]!==today()}
+  function run(n,done){R={n,done,right:0,k:0,busy:false};$('#review').hidden=false;$('#rvRoom').textContent=`Room ${n}: ${ROOMS[n-1].name}`;
+    $('#rvUnit').textContent=`Review: Unit ${unit()} + the room’s skill + order of operations`;next()}
+  function bar(){$('#rvBar').innerHTML=Array.from({length:NEED},(_,i)=>`<i class="${i<R.right?'on':''}"></i>`).join('');$('#rvCount').textContent=`${R.right} of ${NEED} right`}
+  function next(){
+    let p;for(let t=0;t<20;t++){p=Q5.review(unit(),R.n,R.right);if(!R.p||p.key!==R.p.key)break}
+    R.p=p;R.busy=false;bar();
+    $('#rvProb').className='prob'+(/ptxt/.test(p.html)?' small':'');$('#rvProb').innerHTML=p.html+(/ptxt/.test(p.html)?'':'<span class="eq">?</span>');
+    $('#rvFig').innerHTML=p.fig||'';$('#rvFb').className='fb';$('#rvFb').innerHTML='';
+    const unitH=p.unit?`<span class="unit">${p.unit}</span>`:'';
+    if(p.kind==='num')$('#rvAns').innerHTML=`<input class="box" id="r0" type="text" inputmode="numeric" autocomplete="off" aria-label="Your answer" maxlength="5">${unitH}<button type="button" class="btn go" id="rvCheck">Check</button>`;
+    else if(p.kind==='choice'){
+      /* shuffle the choices every time the question is shown */
+      const order=p.choices.map((c,i)=>i).sort(()=>Math.random()-.5);R.order=order;
+      $('#rvAns').innerHTML='<div class="choices">'+order.map((i,j)=>`<button type="button" class="ch" data-i="${i}"><kbd>${j+1}</kbd>${p.choices[i]}</button>`).join('')+'</div>'}
+    else $('#rvAns').innerHTML=`<span class="mixed"><input class="box sm whole" id="rw" type="text" inputmode="numeric" autocomplete="off" aria-label="Whole number part, leave blank if none" maxlength="3"><span class="fbox"><input class="box sm" id="rn" type="text" inputmode="numeric" autocomplete="off" aria-label="Numerator" maxlength="3"><span class="bar"></span><input class="box sm" id="rd" type="text" inputmode="numeric" autocomplete="off" aria-label="Denominator" maxlength="3"></span></span>${unitH}<button type="button" class="btn go" id="rvCheck">Check</button><div class="alab" style="flex-basis:100%">whole number (if any) · fraction</div>`;
+    const f=$('#rvAns input');if(f)f.focus({preventScroll:true});
+  }
+  function check(choice){
+    if(!R||R.busy)return;const p=R.p;let ok,given;
+    if(p.kind==='num'){const v=readInt('r0');if(v===null){$('#r0').focus();return}ok=v===p.ans;given=[v,1]}
+    else if(p.kind==='choice'){if(choice==null)return;ok=choice===p.ans;given=choice}
+    else{const w=readInt('rw'),n=readInt('rn'),d=readInt('rd');
+      if(w===null&&n===null&&d===null){$('#rn').focus();return}
+      if(n!==null&&d===null){$('#rd').focus();return}if(d!==null&&n===null){$('#rn').focus();return}
+      if(d===0){$('#rvFb').className='fb bad';$('#rvFb').textContent='A denominator can’t be 0.';return}
+      given=n===null?[w,1]:[(w||0)*d+n,d];ok=Q5.eqv(given,p.ans)}
+    R.busy=true;
+    if(ok){R.right++;SND.ding();Cup.add(1);bar();$('#rvFb').className='fb ok';$('#rvFb').textContent=pick(['Right!','Yes!','Correct!','Nice work!']);
+      if(R.right>=NEED){save.passed=save.passed||{};save.passed[R.n]=today();persist();
+        setTimeout(()=>{$('#review').hidden=true;const d=R.done;R=null;flashFb('Review done! The room is open. Go clear it!','ok');d()},RM?50:700)}
+      else setTimeout(next,RM?50:600)}
+    else{pfft();let note='';try{note=p.kind==='choice'?p.why(given):p.why(given)}catch(e){}
+      $('#rvAns').querySelectorAll('input,button').forEach(b=>b.disabled=true);
+      $('#rvFb').className='fb bad';
+      $('#rvFb').innerHTML=`Not quite.${note?`<span class="note">${note}</span>`:''}${p.kind==='choice'?'':`<span class="ans">Answer: ${p.show}</span>`}<button type="button" class="btn" id="rvNew">Try a new problem</button>`;
+      $('#rvNew').focus({preventScroll:true})}
+  }
+  $('#review').addEventListener('click',e=>{
+    if(e.target.closest('#rvCheck'))check();
+    else if(e.target.closest('#rvNew'))next();
+    else{const b=e.target.closest('.ch');if(b&&!b.disabled)check(+b.dataset.i)}});
+  $('#review').addEventListener('keydown',e=>{
+    if(!R)return;
+    if(e.key==='Enter'){e.preventDefault();e.stopPropagation();if($('#rvNew'))next();else{const t=e.target;
+      if(t.id==='rw'&&!t.value){$('#rn').focus();return}
+      if(t.id==='rn'&&!$('#rd').value){$('#rd').focus();return}
+      check()}return}
+    if((e.key==='/'||e.key===' ')&&e.target.tagName==='INPUT'){e.preventDefault();const o=['rw','rn','rd'];const i=o.indexOf(e.target.id);if(i>=0&&i<2)$('#'+o[i+1]).focus();return}
+    if(R.p&&R.p.kind==='choice'&&/^[1-9]$/.test(e.key)&&!$('#rvNew')){const i=R.order[+e.key-1];if(i!=null)check(i)}
+  },true);
+  if(/[?&]debug\b/.test(location.search))window.__RV=()=>R&&R.p;
+  return {need,run,NEED};
 })();
 
 /* ================= boot ================= */

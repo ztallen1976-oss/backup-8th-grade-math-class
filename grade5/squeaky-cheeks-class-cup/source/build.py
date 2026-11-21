@@ -175,6 +175,44 @@ rep("room=Math.min(5,G.n+1)", "room=Math.min(6,G.n+1)")
 rep("room=asked>=1&&asked<=5?asked:1;if(!asked)for(let n=1;n<=5;n++)", "room=asked>=1&&asked<=6?asked:1;if(!asked)for(let n=1;n<=6;n++)")
 rep('Rooms 1–2: volume (NC.5.MD.4, NC.5.MD.5). Rooms 3–5: multiplying fractions and area (NC.5.NF.4).', 'Rooms 1–2: volume (NC.5.MD.4–5). Rooms 3–4: multiplying fractions and area (NC.5.NF.4). Room 5: dividing with unit fractions (NC.5.NF.7). Room 6: review.')
 
+
+# ---- REVIEW GATE: 6 right before each room (review.js) ----
+rep('<div class="overlay" id="homeroom" hidden>', """<div class="overlay" id="review" hidden>
+  <div class="card rv">
+    <h2>Warm-up review</h2>
+    <p class="std" id="rvRoom"></p>
+    <p>Get <b>6 right</b> to open the room. A wrong answer gets a brand-new problem.</p>
+    <div class="rvbar" id="rvBar"></div><p class="std" id="rvCount"></p>
+    <div class="prob" id="rvProb"></div>
+    <div id="rvFig"></div>
+    <div class="answer" id="rvAns"></div>
+    <div class="fb" id="rvFb" aria-live="polite"></div>
+    <p class="std" id="rvUnit"></p>
+  </div>
+</div>
+
+<div class="overlay" id="homeroom" hidden>""")
+rep('@keyframes wiggle', """/* review gate */
+#review .card.rv{width:min(560px,100%)}
+#review .prob{min-height:0;margin:10px 0}
+#review .answer{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px}
+#review .go{background:var(--stink);color:#10200a;border-color:#10200a}
+#rvFig{display:flex;justify-content:center;margin:6px 0}
+#rvFig .fig{width:100%;max-width:300px;height:auto;background:#1b1829;border-radius:10px;border:2px solid var(--edge)}
+#rvFb{min-height:24px;margin-top:8px}
+#rvFb .btn{display:block;margin:10px auto 0}
+.rvbar{display:flex;gap:6px;justify-content:center;margin-top:4px}
+.rvbar i{width:34px;height:12px;border-radius:6px;background:#231f37;border:2px solid var(--edge)}
+.rvbar i.on{background:var(--stink)}
+@keyframes wiggle""")
+review = open(os.path.join(HERE, 'review.js')).read()
+rep("/* ================= boot ================= */", "/* ================= review gate ================= */\n" + review + "\n/* ================= boot ================= */")
+rep("function startRoom(n){ac();if(Cup.need()){Cup.ask(()=>startRoom(n));return}",
+    "function startRoom(n){ac();if(Cup.need()){Cup.ask(()=>startRoom(n));return}if(Review.need(n)){$('#title').hidden=true;$('#won').hidden=true;Review.run(n,()=>startRoom(n));return}")
+rep("  if(!G||!$('#title').hidden||!$('#won').hidden||!$('#homeroom').hidden)return;",
+    "  if(!G||!$('#title').hidden||!$('#won').hidden||!$('#homeroom').hidden||!$('#review').hidden)return;")
+rep("Pick any room. Rooms 1–2: volume", "Before each room: a 6-problem warm-up review. Get 6 right to open the room. Pick any room. Rooms 1–2: volume")
+
 # nothing from the 8th grade site may remain
 for bad in ['arcade-send', 'tracker-config', 'site-bar', 'ArcadeSend', 'genInt', 'genFrac']:
     assert bad not in s, bad

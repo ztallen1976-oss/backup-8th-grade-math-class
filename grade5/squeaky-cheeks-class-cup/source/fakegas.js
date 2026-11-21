@@ -23,14 +23,18 @@ function makeEnv(){
     Utilities:{formatDate:(d,tz,f)=>f.includes('HH')?'2026-11-21 10:00':'2026-11-21'},Session:{getScriptTimeZone:()=>'America/New_York'},
     HtmlService:{createHtmlOutputFromFile:()=>({setTitle(){return this},addMetaTag(){return this},setXFrameOptionsMode(){return this}}),XFrameOptionsMode:{DEFAULT:1}},
     console};
-  vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/'+(require('fs').existsSync(__dirname+'/Code.gs')?'Code.gs':'../Code.gs'),'utf8'),ctx);
+  vm.createContext(ctx);vm.runInContext(fs.readFileSync(__dirname+'/Code.gs','utf8'),ctx);
   return {ctx,ss,sheets};
 }
 module.exports={makeEnv};
 if(require.main===module){
   const {ctx,sheets}=makeEnv();const assert=require('assert');
   ctx.setup();
-  assert.deepStrictEqual(Object.keys(sheets).sort(),['Daily','Past Contests','Read Me','Totals']);
+  assert.deepStrictEqual(Object.keys(sheets).sort(),['Daily','Past Contests','Read Me','Settings','Totals']);
+  assert.strictEqual(ctx.getBoard().review,3,'review unit defaults to 3');
+  sheets.Settings.getRange(2,2).setValue(2);ctx.CacheService.getScriptCache().remove('board');assert.strictEqual(ctx.getBoard().review,2);
+  sheets.Settings.getRange(2,2).setValue('banana');ctx.CacheService.getScriptCache().remove('board');assert.strictEqual(ctx.getBoard().review,3,'bad value -> 3');
+  sheets.Settings.getRange(2,2).setValue(3);ctx.CacheService.getScriptCache().remove('board');
   let b=ctx.getBoard();assert.strictEqual(b.classes.length,2);assert.strictEqual(b.classes[0].points,0);
   b=ctx.addPoints('Ms. Tesnar',5);assert.strictEqual(b.classes[0].points,5);
   ctx.addPoints('Ms. Tesnar',10);b=ctx.addPoints('Ms. Covalt',7);
@@ -42,6 +46,6 @@ if(require.main===module){
   ctx.newContest();b=ctx.getBoard();assert.strictEqual(b.classes[0].points,0);assert.strictEqual(sheets['Past Contests'].rows.length,3);assert.strictEqual(sheets.Daily.rows.slice(1).filter(r=>r[0]).length,0);
   ctx.setup();assert.strictEqual(sheets.Totals.rows.length,3,'setup twice must not duplicate rows');
   // nothing personal anywhere
-  assert(!/Session\.getActiveUser|getEmail/.test(fs.readFileSync(__dirname+'/'+(require('fs').existsSync(__dirname+'/Code.gs')?'Code.gs':'../Code.gs'),'utf8')));
+  assert(!/Session\.getActiveUser|getEmail/.test(fs.readFileSync(__dirname+'/Code.gs','utf8')));
   console.log('Code.gs tests passed');
 }

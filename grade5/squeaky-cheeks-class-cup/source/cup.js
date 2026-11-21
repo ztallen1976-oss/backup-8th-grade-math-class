@@ -4,7 +4,7 @@
    {homeroom, points}. If the server can't be reached, points wait on this Chromebook and are sent later. */
 const Cup=(function(){
   const GS=(()=>{try{return !!(window.google&&google.script&&google.script.run)}catch(e){return false}})();
-  let classes=['Ms. Tesnar','Ms. Covalt'],board=null,sending=false,boardMode=false,failed=0;
+  let reviewU=3,classes=['Ms. Tesnar','Ms. Covalt'],board=null,sending=false,boardMode=false,failed=0;
   /* points not sent yet, per homeroom: {"Ms. Tesnar": 3} */
   let pend={};try{pend=JSON.parse(localStorage.getItem('sc5-pending')||'{}')||{};if(typeof pend!=='object'||Array.isArray(pend)||'h' in pend)pend={}}catch(e){pend={}}
   const savePend=()=>{try{localStorage.setItem('sc5-pending',JSON.stringify(pend))}catch(e){}};
@@ -22,7 +22,7 @@ const Cup=(function(){
         if(/unknown homeroom/i.test(String(e&&e.message||e))){delete pend[h];savePend()}
         render()})}
   function refresh(){if(!GS)return;run('getBoard',[],setBoard,()=>{failed++;render()})}
-  function setBoard(b){if(!b||!b.classes)return;board=b;const names=b.classes.map(c=>c.name);if(names.length)classes=names;render()}
+  function setBoard(b){if(!b||!b.classes)return;board=b;if([1,2,3].includes(b.review))reviewU=b.review;const names=b.classes.map(c=>c.name);if(names.length)classes=names;render()}
   /* points shown include this Chromebook's points that are still waiting to be sent */
   function rows(){const list=(board&&board.classes)||classes.map(n=>({name:n,points:0,students:0}));
     return list.map(c=>({name:c.name,points:(+c.points||0)+(pend[c.name]||0),students:+c.students||0}))}
@@ -52,5 +52,5 @@ const Cup=(function(){
     /* projector view: the web app link + ?board=1 */
     try{google.script.url.getLocation(loc=>{if(loc&&loc.parameter&&loc.parameter.board){boardMode=true;document.body.classList.add('boardmode');$('#board').hidden=false;render();setInterval(refresh,15000)}})}catch(e){}
   }
-  return {on,home,need,add,flush,ask,start,render};
+  return {on,home,need,add,flush,ask,start,render,reviewUnit:()=>reviewU};
 })();

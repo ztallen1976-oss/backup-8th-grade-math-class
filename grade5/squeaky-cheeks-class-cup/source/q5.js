@@ -290,6 +290,37 @@ function divStep(){const b=pick(DS),d=pick(DS),a=rnum(b),c=rnum(d);if(a===b-a&&c
     show:`Keep ${a}/${b}, change ÷ to ×, flip ${c}/${d} to ${d}/${c}: ${right}.`,
     why:i=>(notes[choices[i]]||'')+` The right way: keep ${a}/${b}, change ÷ to ×, flip ${c}/${d} to ${d}/${c}.`})}
 
+
+/* ----- order of operations, whole numbers (NC.5.OA.2). Answers are whole numbers; division always comes out even. ----- */
+function pemdas(){
+  const T=[
+    ()=>{const a=ri(2,12),b=ri(2,9),c=ri(2,9);return [`${a} + ${b} × ${c}`,a+b*c,[(a+b)*c,'You added first. Multiply before you add.']]},
+    ()=>{const b=ri(2,9),c=ri(2,9),a=b*c+ri(1,9);return [`${a} − ${b} × ${c}`,a-b*c,[(a-b)*c,'You subtracted first. Multiply before you subtract.']]},
+    ()=>{const a=ri(2,9),b=ri(2,9),c=ri(2,6);return [`(${a} + ${b}) × ${c}`,(a+b)*c,[a+b*c,'Parentheses first! Add inside the ( ) before you multiply.']]},
+    ()=>{const c=ri(2,6),q=ri(2,9),b=ri(2,6),a=q*c*b;return [`${a} ÷ ${b} × ${c}`,a/b*c,[a/(b*c),'Multiply and divide go LEFT to RIGHT. Divide first here, because ÷ comes first.']]},
+    ()=>{const c=ri(2,5),b=c*ri(2,6),a=ri(b/c+1,20),d=ri(1,9);return [`${a} − ${b} ÷ ${c} + ${d}`,a-b/c+d,[(a-b)/c+d,'Divide before you subtract.']]},
+    ()=>{const a=ri(2,6),b=ri(6,12),c=ri(1,b-1),d=ri(2,9);return [`${a} × (${b} − ${c}) + ${d}`,a*(b-c)+d,[a*b-c+d,'Parentheses first! Subtract inside the ( ) first.']]},
+    ()=>{const b=ri(2,5),c=ri(2,5),d=ri(2,4),a=b*c*d;return [`${a} ÷ (${b} × ${c})`,a/(b*c),[a/b*c,'Parentheses first! Multiply inside the ( ), then divide.']]},
+    ()=>{const a=ri(2,9),b=ri(2,9),c=ri(2,9),d=ri(2,5);return [`[${a} + (${b} + ${c})] × ${d}`,(a+b+c)*d,[a+b+c*d,'Work from the inside out: ( ) first, then [ ], then multiply.']]}];
+  for(let k=0;k<50;k++){const [ex,ans,miss]=pick(T)();if(!Number.isInteger(ans)||ans<0||ans>400||miss[0]===ans)continue;
+    return mk({kind:'num',std:'NC.5.OA.2',key:'oo'+ex,ans,html:`<span class="ptxt" style="font-size:24px;text-align:center">${ex}</span>`,text:ex,fig:'',
+      show:`${ex} = ${ans}`,why:g=>noteFrom([{v:miss[0],t:miss[1]}],g)||'Order of operations: ( ) and [ ] first, then × and ÷ left to right, then + and − left to right.'})}
+}
+/* ----- fractions as division (NC.5.NF.3): a ÷ b = a/b, sharing stories ----- */
+function fracQuotient(){const b=pick([2,3,4,5,6,8]),a=ri(1,3*b);if(a%b===0)return fracQuotient();const nm=pick(NAMES);
+  const st=pick([[`${a} pizzas are shared equally by ${b} friends. How much pizza does each friend get?`,'pizzas'],[`${a} cups of juice are poured equally into ${b} glasses. How many cups in each glass?`,'cups'],[`${nm} cuts ${a} feet of ribbon into ${b} equal pieces. How long is each piece?`,'feet']]);
+  const ans=[a,b];
+  return mk({kind:'frac',std:'NC.5.NF.3',key:`fq${a}${b}${st[1]}`,ans,unit:st[1],html:`<span class="ptxt">${st[0]}</span>`,text:`${a} ÷ ${b}`,fig:'',
+    show:`${a} ÷ ${b} = ${frH(a,b)}${valH(a,b)!==frH(a,b)?' = '+valH(a,b):''} ${st[1]}`,
+    why:g=>noteFrom([{v:[b,a],t:`Upside down! The amount shared (${a}) goes on top: ${a} ÷ ${b} = ${a}/${b}.`},{v:[1,b],t:`That is one share of ONE thing. There are ${a} things to share: ${a} ÷ ${b}.`}],g)})}
+/* ----- review mixes by unit (Ms. Tesnar sets the unit in the Sheet's Settings tab). Always one order-of-operations problem. ----- */
+const REVIEW={
+  1:[[volCount,2],[volBox,3],[volBase,2],[volMissing,2],[volComposite,2]],
+  2:[[fracQuotient,4],[wholeTimesFrac,3],[fracOfWhole,3],[wordWhole,2],[fracFrac,2],[areaFrac,2],[volBox,1]],
+  3:[[fracFrac,3],[areaFrac,2],[mixedTimes,2],[scaling,1],[unitDivWhole,1],[wholeDivUnit,1],[fracDivFrac,3],[mixedDivFrac,2],[divWord,2],[wordWhole,1],[fracQuotient,1]]};
+/* problem k of a review: #2 is always order of operations, #1 and #4 are from the room, the rest from the unit */
+function review(unit,room,k){if(k===1)return Object.assign(pemdas(),{again:pemdas});if(k===0||k===3)return gen(room);return pickFrom(REVIEW[unit]||REVIEW[3])}
+
 /* ---------------- rooms ---------------- */
 const ROOM_TOPICS=['Volume: count the cubes','Volume: base × height, missing edge, two boxes','Fraction × whole number','Fraction × fraction and area','Dividing fractions: flip and multiply','Mixed numbers, dividing, scaling and review'];
 const ROOM_STD=['NC.5.MD.4, NC.5.MD.5','NC.5.MD.5','NC.5.NF.4','NC.5.NF.4','NC.5.NF.7 (+ NC.6.NS.1)','NC.5.NF.4, NC.5.NF.7, NC.5.MD.5'];
@@ -300,7 +331,8 @@ const BANK=[
   [[fracFrac,5],[areaFrac,4],[areaWholeFrac,3]],
   [[unitDivWhole,2],[wholeDivUnit,2],[fracDivWhole,2],[wholeDivFrac,2],[fracDivFrac,4],[mixedDivFrac,2],[mixedDivWhole,1],[fracDivMixed,2],[divWord,4],[divStep,2]],
   [[fracDivFrac,3],[mixedDivFrac,2],[fracDivMixed,1],[divWord,2],[wholeDivFrac,1],[mixedTimes,3],[scaling,2],[wordWhole,1],[areaFrac,1],[volComposite,1]]];
-function gen(room){const B=BANK[room-1],tot=B.reduce((s,x)=>s+x[1],0);let r=Math.random()*tot;for(const [f,w] of B){r-=w;if(r<0)return f()}return B[0][0]()}
-return {gen,ROOM_TOPICS,ROOM_STD,BANK,valH,valT,frH,gcd,red,eqv,all:{unitDivWhole,wholeDivUnit,fracDivWhole,wholeDivFrac,fracDivFrac,mixedDivFrac,mixedDivWhole,fracDivMixed,divWord,divStep,volCount,volBox,volBase,volMissing,volComposite,wholeTimesFrac,fracOfWhole,wordWhole,fracFrac,areaFrac,areaWholeFrac,mixedTimes,scaling}};
+function pickFrom(B){const tot=B.reduce((s,x)=>s+x[1],0);let r=Math.random()*tot;for(const [f,w] of B){r-=w;if(r<0){const p=f();p.again=f;return p}}const p=B[0][0]();p.again=B[0][0];return p}
+function gen(room){return pickFrom(BANK[room-1])}
+return {gen,review,REVIEW_UNITS:[1,2,3],pickFrom,ROOM_TOPICS,ROOM_STD,BANK,valH,valT,frH,gcd,red,eqv,all:{pemdas,fracQuotient,unitDivWhole,wholeDivUnit,fracDivWhole,wholeDivFrac,fracDivFrac,mixedDivFrac,mixedDivWhole,fracDivMixed,divWord,divStep,volCount,volBox,volBase,volMissing,volComposite,wholeTimesFrac,fracOfWhole,wordWhole,fracFrac,areaFrac,areaWholeFrac,mixedTimes,scaling}};
 })();
 /*Q5-END*/

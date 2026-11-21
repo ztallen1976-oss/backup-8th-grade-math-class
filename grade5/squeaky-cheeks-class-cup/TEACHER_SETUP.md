@@ -27,8 +27,15 @@ The problems follow the NCDPI 5th grade unpacking limits:
 
 **Every problem except division shows a model** (cube drawing, area model, bar model, tape diagram or number line), because NC asks that models always be used in 5th grade. A wrong answer tells the student what the mistake was ("You multiplied the top AND bottom by 3…") and shows the right answer. That problem comes back a few questions later.
 
+**Review first, then the game:**
+- Before each room opens, students must get **6 warm-up review problems right**: 2 on the room's skill, 1 order of operations (PEMDAS), and 3 from the unit you choose.
+- There is **no skip and no Next button**. A wrong answer explains the mistake, shows the answer, and then gives a **brand-new problem with new numbers**, so copying a shown answer never helps. Tap choices are shuffled every time.
+- Inside the game, a missed problem also comes back with new numbers.
+- Passing a room's review counts for the rest of the day on that Chromebook.
+- **Pick the review unit** in the scoreboard Sheet: the **Settings** tab, cell **B2** (1 = volume, 2 = fractions as division and multiplying, 3 = multiplying and dividing fractions). It changes within a minute; no new deployment needed.
+
 **The Class Cup:**
-- Every right answer = **1 point** for the student's homeroom.
+- Every right answer = **1 point** for the student's homeroom (review answers count too).
 - Clearing a room = **10 bonus points**.
 - The scoreboard at the top of the game shows both classes as a tug-of-war bar.
 - There is also a big scoreboard for the projector.

@@ -15,7 +15,7 @@ var CONTEST_NAME = 'Squeaky Cheeks Class Cup';
 var MAX_POINTS_PER_SEND = 60;                  // a game sends at most this many points at once (stops cheating)
 /* ==================================== */
 
-var TOTALS = 'Totals', DAILY = 'Daily', PAST = 'Past Contests', README = 'Read Me';
+var TOTALS = 'Totals', DAILY = 'Daily', PAST = 'Past Contests', README = 'Read Me', SETTINGS = 'Settings';
 
 /** The web app: shows the game. Add ?board=1 to the link for the big projector scoreboard. */
 function doGet(e) {
@@ -115,9 +115,15 @@ function setupSheets_(ss) {
   d.getRange('A:A').setNumberFormat('@');   // dates stay plain text like 2026-11-21
   var p = ss.getSheetByName(PAST) || ss.insertSheet(PAST);
   if (p.getLastRow() < 1) { p.appendRow(['Contest ended', 'Homeroom', 'Points', 'Students']); p.getRange(1, 1, 1, 4).setFontWeight('bold'); }
+  var st = ss.getSheetByName(SETTINGS) || ss.insertSheet(SETTINGS);
+  if (st.getLastRow() < 1) {
+    st.getRange(1, 1, 3, 2).setValues([['Setting', 'Value'], ['Review unit (1, 2 or 3)', 3],
+      ['What it does', 'Before each room, students must get 6 review problems right: 2 from the room, 1 order of operations, 3 from this unit.']]);
+    st.getRange(1, 1, 1, 2).setFontWeight('bold'); st.setColumnWidth(1, 220); st.setColumnWidth(2, 640);
+  }
   var r = ss.getSheetByName(README) || ss.insertSheet(README);
   r.clear();
-  r.getRange(1, 1, 9, 1).setValues([
+  r.getRange(1, 1, 10, 1).setValues([
     [CONTEST_NAME],
     ['Totals: points for each homeroom. Change only the Students column (optional). Points per student shows when both are filled in.'],
     ['Daily: points earned each day by each homeroom.'],
@@ -126,7 +132,8 @@ function setupSheets_(ss) {
     ['To rename a homeroom: change CLASSES at the top of the script AND the name in column A of Totals, then Deploy > Manage deployments > Edit > New version.'],
     ['Game link for students: Deploy > Manage deployments > copy the Web app URL. Post it in Google Classroom.'],
     ['Projector scoreboard: the same link with ?board=1 at the end.'],
-    ['Each right answer = 1 point. Clearing a room = 10 points. A game sends at most ' + MAX_POINTS_PER_SEND + ' points at a time.']]);
+    ['Each right answer = 1 point (review answers count too). Clearing a room = 10 points. A game sends at most ' + MAX_POINTS_PER_SEND + ' points at a time.'],
+    ['Review before each room: change the unit in the Settings tab (1, 2 or 3). It takes effect within a minute; no new deployment needed.']]);
   r.getRange(1, 1).setFontWeight('bold').setFontSize(14); r.setColumnWidth(1, 900);
   var blank = ss.getSheetByName('Sheet1');
   if (blank && blank.getLastRow() === 0) ss.deleteSheet(blank);   // the empty starter tab
@@ -139,7 +146,9 @@ function readBoard_() {
     if (row) { var v = t.getRange(row, 2, 1, 2).getValues()[0]; pts = Number(v[0]) || 0; n = Math.max(0, Math.floor(Number(v[1]) || 0)); }
     out.push({ name: c, points: pts, students: n });
   });
-  return { contest: CONTEST_NAME, classes: out, updated: new Date().toISOString() };
+  var review = 3, st = ss.getSheetByName(SETTINGS);
+  if (st) { var v = Math.floor(Number(st.getRange(2, 2).getValue())); if (v >= 1 && v <= 3) review = v; }
+  return { contest: CONTEST_NAME, classes: out, review: review, updated: new Date().toISOString() };
 }
 function findRow_(sh, name) {
   var n = sh.getLastRow(); if (n < 2) return 0;

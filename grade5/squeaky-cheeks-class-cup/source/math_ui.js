@@ -13,7 +13,8 @@ function refocus(){if(!G)return;
 function flashFb(t,cls){const f=$('#fb');f.className='fb '+(cls||'');f.innerHTML=t}
 function nextQ(){
   const Q=G.q;let p=null;
-  if(Q.queue.length&&Q.queue[0].due<=Q.seen)p=Q.queue.shift().p;
+  /* a missed problem comes back as a NEW problem of the same kind (new numbers): seeing the answer never helps */
+  if(Q.queue.length&&Q.queue[0].due<=Q.seen){const r=Q.queue.shift();try{p=r.again();p.again=r.again}catch(e){p=null}}
   if(!p){for(let k=0;k<20;k++){p=gen(G.n);if(p.key!==Q.lastKey)break}}
   Q.lastKey=p.key;Q.seen++;Q.p=p;Q.stage='main';Q.busy=false;
   if($('#fb').classList.contains('bad'))flashFb('','');   /* the last mistake note was read; start clean */
@@ -63,7 +64,7 @@ function right(){
 }
 function wrong(){
   G.wrong++;const Q=G.q,p=Q.p;pfft();
-  if(!p.retry){p.retry=true;Q.queue.push({p,due:Q.seen+3})}
+  if(p.again&&!p.retry){Q.queue.push({again:p.again,due:Q.seen+3})}
   let note='';try{note=p.kind==='choice'?p.why(Q.given):p.why(Q.given.v||Q.given)}catch(e){}
   if(p.kind==='choice'){const b=document.querySelector(`#answer .ch[data-i="${p.ans}"]`);if(b)b.classList.add('yes')}
   flashFb(`pfft. Not quite.${note?`<span class="note">${note}</span>`:''}${p.kind==='choice'?'':`<span class="ans">Answer: ${p.show}</span>`}`,'bad');

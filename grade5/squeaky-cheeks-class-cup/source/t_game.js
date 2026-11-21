@@ -5,6 +5,16 @@ async function answer(pg,right=true){
   if(p.kind==='choice'){await pg.evaluate(i=>__submit(i),right?p.ans:(p.ans+1)%p.choices.length);return p}
   if(p.kind==='num'){await pg.fill('#a0',String(right?p.ans:p.ans+1));await pg.press('#a0','Enter');return p}
   await pg.fill('#an',String(right?p.ans[0]:p.ans[0]+1));await pg.fill('#ad',String(p.ans[1]));await pg.press('#ad','Enter');return p}
+async function passReview(pg){
+  if(await pg.isHidden('#review'))return 0;let n=0;
+  while(!(await pg.isHidden('#review'))){const p=await pg.evaluate(()=>{const p=__RV();return p&&{kind:p.kind,ans:p.ans}});if(!p){await pg.waitForTimeout(100);continue}
+    const cnt=await pg.$eval('#rvCount',e=>e.textContent);
+    if(p.kind==='num'){await pg.fill('#r0',String(p.ans));await pg.click('#rvCheck')}
+    else if(p.kind==='choice'){await pg.click(`#rvAns .ch[data-i="${p.ans}"]`)}
+    else{await pg.fill('#rn',String(p.ans[0]));await pg.fill('#rd',String(p.ans[1]));await pg.click('#rvCheck')}
+    n++;await pg.waitForFunction(c=>document.querySelector('#review').hidden||document.querySelector('#rvCount').textContent!==c,cnt,{timeout:5000});
+    await pg.waitForFunction(()=>document.querySelector('#review').hidden||!document.querySelector('#rvFb').textContent,null,{timeout:5000}).catch(()=>{})}
+  return n}
 async function waitNext(pg,seq){await pg.waitForFunction(s=>{const b=document.querySelector('#bonus');if(!b.hidden){return true}return document.querySelector('#prob').dataset.seq!==String(s)},seq,{timeout:8000});
   if(await pg.evaluate(()=>!document.querySelector('#bonus').hidden)){await pg.keyboard.press('Escape');}
 }
@@ -17,7 +27,7 @@ async function waitNext(pg,seq){await pg.waitForFunction(s=>{const b=document.qu
     assert(await pg.isHidden('#homeroom'),'no homeroom prompt in practice mode');
     assert(await pg.isHidden('#cup'),'no cup in practice mode');
     for(let room=1;room<=6;room++){
-      await pg.evaluate(r=>{document.querySelector('#bRooms').click();document.querySelector(`.rm[data-r="${r}"]`).click();document.querySelector('#bStart').click()},room);
+      await pg.evaluate(r=>{document.querySelector('#bRooms').click();document.querySelector(`.rm[data-r="${r}"]`).click();document.querySelector('#bStart').click()},room);await passReview(pg);
       const kinds=new Set();
       for(let k=0;k<12;k++){const seq=await pg.$eval('#prob',e=>e.dataset.seq);const p=await answer(pg,true);kinds.add(p.kind);
         await pg.waitForFunction(()=>/ok/.test(document.querySelector('#fb').className),null,{timeout:3000});await waitNext(pg,seq)}
@@ -25,7 +35,7 @@ async function waitNext(pg,seq){await pg.waitForFunction(s=>{const b=document.qu
       if(vp.width===1100)await pg.screenshot({path:`shot_room${room}.png`});
       console.log(vp.width,'room',room,'ok',[...kinds].join(','))}
     // a wrong answer names the mistake
-    await pg.evaluate(()=>{document.querySelector('#bRooms').click();document.querySelector('.rm[data-r="3"]').click();document.querySelector('#bStart').click()});
+    await pg.evaluate(()=>{document.querySelector('#bRooms').click();document.querySelector('.rm[data-r="3"]').click();document.querySelector('#bStart').click()});await passReview(pg);
     let got=false;for(let k=0;k<10&&!got;k++){const p=await pg.evaluate(()=>{const p=__Q();return {kind:p.kind,ans:p.ans,html:p.html}});
       if(p.kind==='frac'&&/class="op">×<\/span><span>\d/.test(p.html)===false&&/^<span>\d+<\/span><span class="op">×/.test(p.html)){
         // n × a/b : type a/b (multiplied top and bottom) -> must get a note
@@ -50,28 +60,28 @@ async function waitNext(pg,seq){await pg.waitForFunction(s=>{const b=document.qu
   await pg.click('#bStart');await pg.waitForSelector('#homeroom:not([hidden])');
   const names=await pg.$$eval('#homeList .home',bs=>bs.map(b=>b.dataset.h));assert.deepStrictEqual(names,['Ms. Tesnar','Ms. Covalt']);
   await pg.screenshot({path:'shot_homeroom.png'});
-  await pg.click('#homeList .home[data-h="Ms. Covalt"]');
+  await pg.click('#homeList .home[data-h="Ms. Covalt"]');const rv=await passReview(pg);
   for(let k=0;k<7;k++){const seq=await pg.$eval('#prob',e=>e.dataset.seq);await answer(pg,true);await waitNext(pg,seq)}
   // wrong answers earn nothing
   { const seq=await pg.$eval('#prob',e=>e.dataset.seq);await answer(pg,false);await waitNext(pg,seq) }
   await pg.evaluate(()=>__Cup.flush());await pg.waitForTimeout(800);
-  const pts=env.ctx.getBoard().classes.find(c=>c.name==='Ms. Covalt').points;console.log('Covalt points in Sheet:',pts);assert.strictEqual(pts,7);
+  const pts=env.ctx.getBoard().classes.find(c=>c.name==='Ms. Covalt').points;console.log('Covalt points in Sheet:',pts,'(review',rv,')');assert.strictEqual(pts,7+rv);
   assert(await pg.$eval('#cup',e=>e.textContent.includes('Playing for Ms. Covalt')));
   await pg.screenshot({path:'shot_cup.png'});
   // points are kept on the Chromebook while offline and sent later
   await pg.evaluate(()=>{window.__realGas=window.__gas;window.__gas=async()=>({err:'offline'})});
   for(let k=0;k<3;k++){const seq=await pg.$eval('#prob',e=>e.dataset.seq);await answer(pg,true);await waitNext(pg,seq)}
   await pg.evaluate(()=>__Cup.flush());await pg.waitForTimeout(300);
-  assert.strictEqual(env.ctx.getBoard().classes[1].points,7,'nothing sent while offline');
+  assert.strictEqual(env.ctx.getBoard().classes[1].points,7+rv,'nothing sent while offline');
   await pg.evaluate(()=>{window.__gas=window.__realGas});await pg.evaluate(()=>__Cup.flush());await pg.waitForTimeout(800);
   env.ctx.CacheService.getScriptCache().remove('board');
-  assert.strictEqual(env.ctx.getBoard().classes[1].points,10,'offline points sent later');
+  assert.strictEqual(env.ctx.getBoard().classes[1].points,10+rv,'offline points sent later');
   // change homeroom
   await pg.click('#cupChange');await pg.click('#homeList .home[data-h="Ms. Tesnar"]');
   assert(await pg.$eval('#cup',e=>e.textContent.includes('Playing for Ms. Tesnar')));
   // projector board
   const pb=await ctxp.newPage();await pb.addInitScript(initGas,true);await pb.goto(URL);await pb.waitForSelector('#board:not([hidden])');await pb.waitForTimeout(500);
-  assert(await pb.isHidden('.wrap'));const bt=await pb.$eval('#boardCup',e=>e.textContent);assert(/Ms\. Covalt\s*10/.test(bt),bt);
+  assert(await pb.isHidden('.wrap'));const bt=await pb.$eval('#boardCup',e=>e.textContent);assert(new RegExp('Ms\\. Covalt\\s*'+(10+rv)).test(bt),bt);
   await pb.screenshot({path:'shot_board.png'});
   // nothing personal leaves the page: only homeroom + points
   console.log('errors:',errs.length?errs:'none');assert(!errs.length);
