@@ -290,6 +290,17 @@ const fail = (rule, where, what) => fails.push(`${rule}  ${where}: ${what}`);
     if (i < 0 || j < i || /<!--unit-extras-->/.test(u) || (u.match(/class="mx-best"/g) || []).length < 4) fail('K4', 'grade8/units3-4.html', 'activities after the Pre-Test & Tutorial, each group with Best use (python3 _build/unit_extras.py)');
     if (!/together:\s*\[/.test(rd('site-config.js')) || !/SITE_CONFIG \|\| \{\}\)\.together/.test(rd('side-nav.js')) || !/SITE_CONFIG \|\| \{\}\)\.together/.test(rd('grade8/index.html'))) fail('K4', 'site-config.js', 'together setting read by side-nav.js and the 8th Grade home'); }
   for (const f of ['grade8/winter-break-review.html', 'grade8/winter-break-review-v2.html']) { const w = rd(f); if (!/"intro":/.test(w) || (w.match(/wb-box/g) || []).length < 7 || /\bEC\b/.test(w)) fail('J2', f, 'Quick review boxes, no EC label'); }
+  /* J7 (Nov 23, 2026): Winter Break pages: a to-scale picture on every angle problem, math keys for every typed-answer section, keys kept on in the workspace */
+  for (const f of ['grade8/winter-break-review.html', 'grade8/winter-break-review-v2.html']) {
+    const w = rd(f), P = JSON.parse((w.match(/window\.PRACTICE = (\{.*\});<\/script>/) || [])[1] || '{}');
+    (P.data && P.data.secs || []).forEach(sec => {
+      if (/8\.G\.5/.test(sec.std || '')) sec.probs.forEach(p => { if (!p.fig || !fs.existsSync(path.join(ROOT, 'grade8', p.fig))) fail('J7', f, sec.title + ' problem ' + p.n + ': no picture (python3 _build/winter_review/figs.py)'); });
+      const typed = sec.probs.some(p => /^\s*[-−]?\d[\d,]*(\.\d+)?\s*$/.test(String(p.ans)) || /class="fr"/.test(String(p.ans)));
+      if (typed && !(sec.keys && sec.keys.length)) fail('J7', f, sec.title + ': typed answers but no math keys');
+    });
+    if (!/math-keys\.js\?v=/.test(w) || !/SW_KEYS = 'always'/.test(w)) fail('J7', f, 'math-keys.js + SW_KEYS always');
+  }
+  if (!/SW_KEYS === 'always'/.test(rd('grade8/step-work.js'))) fail('J7', 'grade8/step-work.js', 'SW_KEYS = always keeps the workspace keys on screen');
   const lvh = rd('grade8/laser-vault.html');
   if (!/id="brief"/.test(lvh) || !/function fence\(/.test(lvh) || !/function drawObj\(/.test(lvh) || !/lv-tut/.test(lvh) || !/AGENT_MAP/.test(lvh)) fail('I9', 'grade8/laser-vault.html', 'briefing, agent, laser fences, objectives, guided first fence');
   const rr = rd('grade8/root-rocket.html');

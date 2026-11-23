@@ -1,6 +1,7 @@
 /* The numbers and labels drawn inside practice pictures (PNG files), so the step-by-step tool can build
    "Show me the equation" from them (review fix, Nov 12, 2026). Key = picture file name. */
 window.FIG_TEXT = {
+  'WB_G1.png': '64° x°', 'WB_G2.png': '112° x°', 'WB_G3.png': '75° (3x + 15)°', 'WB_G4.png': '(2x + 10)° (3x + 20)°', 'WB_G5.png': 'x° 2x° 3x°', 'WB_G6.png': '40° (2x + 10)° (5x − 10)°', 'WB_G7.png': '1 2',   // Winter Break Review (Nov 23, 2026)
   'Unit4_Practice1_D1.png': '64° 45° x°', 'Unit4_Practice1_D2.png': '82° 60° x°', 'Unit4_Practice1_D5.png': '47° 43° x°',
   'Unit4_Practice2_D1.png': '75° 47° x°', 'Unit4_Practice2_D2.png': '90° 65° x°', 'Unit4_Practice2_D5.png': '38° 42° x°',
   'Unit4_Practice1_D3.png': '65° 52° x°', 'Unit4_Practice1_D4.png': 'x° 55° 130°', 'Unit4_Practice2_D3.png': '60° 48° x°', 'Unit4_Practice2_D4.png': 'x° 70° 125°',

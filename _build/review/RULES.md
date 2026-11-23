@@ -134,6 +134,12 @@ J6. Skill Builders videos are warm and unhurried (Nov 18, 2026): soft, slower vo
     sentences), calm music, and the "Your turn" question WAITS for the student ("Show me the answer"); no countdown. Video
     words stay at a 3rd–5th grade level (short sentences, about 15 words or fewer; easier wording lives in VTXT in sbvideo.js),
     and a sentence already said in a video is not said again. Every Skill Builder page has the basic calculator (sbcalc.js).
+J7. Winter Break Review notation + pictures (Nov 23, 2026, Zach: "buttons for notation issues such as exponents, radicals ...
+    make sure that all geometry problems have visuals"): every typed-answer section has a Tap-to-type key row under each box
+    (grade8/math-keys.js, keys per section in make.py: − / xⁿ, minimal), the step-by-step workspace keeps its keys on screen on
+    every device (window.SW_KEYS = 'always'), the exponent "Find the value" problems have a workspace that fills the box with the
+    VALUE, and every angle problem has a to-scale picture (_build/winter_review/figs.py; no right-angle mark or measure on an
+    unknown). The paper copies drop the key rows.
     Every 3 different videos watched to the end = 5 minutes of Arcade time (arcade-pass.js, honor system, never locks).
 
 ## K. Finding things (Nov 18, 2026 site rebuild)

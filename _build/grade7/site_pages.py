@@ -180,7 +180,7 @@ def sb_shell(U, mode):
 <link rel="stylesheet" href="../grade8/skills/sb.css?v=%(V)s">
 <script src="../tracker-config.js"></script>
 <script src="../score-send.js?v=20261117a"></script>
-<script src="../grade8/step-work.js?v=20261113e"></script>
+<script src="../grade8/step-work.js?v=20261123a"></script>
 <script src="../grade8/skills/sb.js?v=%(V)s"></script>
 <script src="../grade8/skills/sbfig.js?v=20261118a"></script>
 <script src="skills/g7-sb.js?v=%(V)s"></script>

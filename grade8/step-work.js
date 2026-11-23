@@ -850,7 +850,7 @@
     function keypad(inp, opts) {
       var k = el('div', 'sw-keys'); k.setAttribute('aria-label', 'Math keys');
       // On a Chromebook, show only the keys students can't type. On a touch screen, show the basic keys too.
-      var touch = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+      var touch = window.SW_KEYS === 'always' || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);   // SW_KEYS = 'always': keep the keys on screen on every device (Winter Break Review, Nov 23, 2026)
       var ineq = (original && original.rel !== '=') || (cfg.setup && cfg.setup.ineq);
       var keys = touch ? [[v, v], ['(', '('], [')', ')'], ['−', '-'], ['/', '/']] : [];
       if (touch && opts && opts.letters) keys = opts.letters.map(function (L) { return [L, L]; }).concat(keys.slice(1));
@@ -1339,7 +1339,8 @@
       function useBtn(info) {
         if (!cfg.onAnswer) { work.appendChild(el('p', 'sw-note', 'Now type your answer in the answer box.')); return; }
         var t0 = answerText(info, v); cfg.onAnswer(t0, info);
-        var r = doneNote(t0); work.appendChild(r); keep(r);
+        var got = host.__swInp && String(host.__swInp.value || '').trim();   // "find the angle": the box holds the angle, not x (Nov 23, 2026)
+        var r = doneNote(got && lastSubmit !== 'nomatch' && got !== t0 && got !== t0.replace(/^[a-z]\s*=\s*/i, '') ? got + '</b> (from ' + t0 + ')<b>' : t0); work.appendChild(r); keep(r);
       }
       function thenStage(x) {
         var t = el('div', 'sw-then');
@@ -1660,6 +1661,17 @@
     }
     return box;
   }
+  /* the value of a simplified numeric power expression written by the workspace: "2^5" → "32", "1/2^4" → "1/16"; else '' */
+  function exValue(t) {
+    try {
+      var s = String(t).replace(/\s+/g, '').replace(/[×·]/g, '*'); if (!/^[\d^*/().-]+$/.test(s) || /[a-z]/i.test(s)) return '';
+      var ev = function (u) { if (!/^[\d^*().-]+$/.test(u)) return NaN; var r = u.replace(/(\d+(?:\.\d+)?)\^(-?\d+)/g, function (m, b, e) { return '(' + Math.pow(+b, +e) + ')'; }); if (/\^/.test(r)) return NaN; return Function('"use strict";return (' + r + ')')(); };
+      var parts = s.split('/'); if (parts.length > 2) return '';
+      var n = ev(parts[0]), d = parts.length === 2 ? ev(parts[1]) : 1; if (!isFinite(n) || !isFinite(d) || d === 0) return '';
+      if (n % 1 === 0 && d % 1 === 0) { var g = gcd(n, d); n /= g; d /= g; if (d < 0) { n = -n; d = -d; } return d === 1 ? String(n) : n + '/' + d; }
+      return String(+(n / d).toPrecision(12));
+    } catch (e) { return ''; }
+  }
   function plainTerm(a) {
     function p(n) {
       switch (n.t) {
@@ -1806,7 +1818,7 @@
         var card = document.getElementById('s' + si + 'p' + p.n); if (!card || card.querySelector('.sw-open')) return;
         var inp = card.querySelector('.pr-in'), host = el('div', 'sw-host'); host.__swInp = inp; card.appendChild(host);
         var ex = String(D.unit) === '2' && /^\s*(simplify|multiply|divide)\s*:/i.test(String(p.q).replace(/<[^>]+>/g, ''));
-        if (p.sw) { if (mountExpr(host, { start: p.sw, sci: /×/.test(p.sw), onAnswer: function (t) { fillBox(inp, t); } })) return; }
+        if (p.sw) { var val = /find the value/i.test(String(p.q)); if (mountExpr(host, { start: p.sw, sci: /×/.test(p.sw), onAnswer: function (t) { fillBox(inp, val ? (exValue(t) || t) : t); } })) return; }   // "Find the value": the box gets the number, not 2^5
         if (ex) {
           var q2 = String(p.q).replace(/^\s*(simplify|multiply|divide)\s*:\s*/i, '').replace(/[—–]\s*[a-z][^<]*$/i, '').trim();
           var w2 = mountExpr(host, { start: q2, sci: /10\s*(<sup>|\^|[⁰¹²³⁴⁵⁶⁷⁸⁹⁻])/.test(q2) && /×/.test(q2), onAnswer: function (t) { fillBox(inp, t); } });
@@ -1829,12 +1841,14 @@
           mount(host, { setup: { answer: ans, text: p.q, hint: 'Both equations say what <i>y</i> equals. Set the two right sides equal to each other.' }, onAnswer: function (t, info) { fillBox(inp, info.kind === 'one' ? qtxt(info.x) : t); } });
           return;
         }
-        var angle = unit === '4' && /find x/i.test(p.q) && ans != null;
+        var angle = (unit === '4' || /8\.G\.5/.test(String(sec.std || ''))) && /find (x|the exterior angle)/i.test(p.q) && ans != null;   // Unit 4, or any angle section (Winter Break Review)
         var word = unit === '3' && /word/i.test(sec.title) && ans != null;
+        var thenE = null, xAns = ans;   // p.then = "5x - 10": the answer is that angle, so x solves then = answer (Winter Break G6, Nov 23, 2026)
+        if (angle && p.then) { try { thenE = String(p.then).replace(/−/g, '-'); var se = solve(parseEq(thenE + ' = ' + String(ans)), 'x'); if (se.kind === 'one') xAns = se.x; else thenE = null; } catch (x) { thenE = null; } }
         if (angle || word) mount(host, {
-          setup: { answer: ans, text: p.q, fig: p.fig, word: !angle, hint: angle ? angleHint(p.q + ' ' + sec.title) : 'Turn the words into math one piece at a time. A number that happens once is added; a number that happens again and again is multiplied by the letter.' + (/at most|no more than/i.test(p.q) ? ' "At most" means ≤.' : /at least|no less than/i.test(p.q) ? ' "At least" means ≥.' : ''), ineq: word, figure: angle },
+          setup: { answer: xAns, text: p.q, fig: p.fig, word: !angle, hint: angle ? angleHint(p.q + ' ' + sec.title) + (thenE ? ' Find x first. Then put x into (' + thenE + ') to find the angle.' : '') : 'Turn the words into math one piece at a time. A number that happens once is added; a number that happens again and again is multiplied by the letter.' + (/at most|no more than/i.test(p.q) ? ' "At most" means ≤.' : /at least|no less than/i.test(p.q) ? ' "At least" means ≥.' : ''), ineq: word, figure: angle },
           v: angle ? 'x' : 'x',
-          onAnswer: function (t, info) { fillBox(inp, info.kind === 'one' || info.kind === 'ineq' ? (info.numText || qtxt(info.x)) : t); }
+          onAnswer: function (t, info) { if (thenE && info.kind === 'one') { fillBox(inp, String(ans)); return; } fillBox(inp, info.kind === 'one' || info.kind === 'ineq' ? (info.numText || qtxt(info.x)) : t); }
         });
       });
     });

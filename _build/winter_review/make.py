@@ -3,12 +3,15 @@ NC Check-In, with ample practice and EOG tie-ins; plus one for the students who 
 Writes grade8/winter-break-review.html and grade8/winter-break-review-v2.html (practice-engine pages: one problem at a time,
 Hint, named mistakes, 3 tries, step-by-step, Send my work). Each section starts with a short review box (sec.intro):
 the rule, a worked example, "On the EOG" and "In Math 1". Every answer is checked below with exact math.
-    python3 _build/winter_review/make.py
+Nov 23, 2026 (Zach): tap keys for notation under every typed answer box (sec.keys → grade8/math-keys.js; the step-by-step
+workspace keeps its own keys on screen with window.SW_KEYS = 'always'), "Work it out step by step" on the exponent values
+(p.sw; the box gets the VALUE), and a to-scale picture on every angle problem (p.fig from _build/winter_review/figs.py).
+    python3 _build/winter_review/figs.py && python3 _build/winter_review/make.py && node _build/winter_review/pdfs.js
 """
 import json, pathlib
 from fractions import Fraction as F
 G8 = pathlib.Path(__file__).resolve().parents[2] / 'grade8'
-V = '20261116a'
+V = '20261123a'
 
 def fr(a, b): return f'<span class="fr"><span>{a}</span><span>{b}</span></span>'
 def box(rule, ex, eog, m1, sb=None):
@@ -38,10 +41,15 @@ x = 6; assert 2*x-4 == 8
 x = 4; assert 7*x == 28
 
 B = 'https://zacharyallen-netizen.github.io/Mr-Allen-s-Math-Class/grade8/'
+# section G pictures, drawn TO SCALE by _build/winter_review/figs.py (Nov 23, 2026; rerun it if a problem's numbers change)
+FIG_SIZE = {'WB_G1': [668, 352], 'WB_G2': [668, 352], 'WB_G3': [696, 464], 'WB_G4': [696, 464], 'WB_G5': [696, 420], 'WB_G6': [696, 420], 'WB_G7': [696, 464]}
+def fig(name):
+    assert (G8 / 'practice' / 'fig' / (name + '.png')).exists(), name + ': run python3 _build/winter_review/figs.py first'
+    return dict(fig='practice/fig/' + name + '.png', size=FIG_SIZE[name])
 def sbl(n): return (f'Skill Builders, Unit {n}', f'skill-builders-unit{n}.html')
 
 SECS = [
- dict(title='A. Rational vs. Irrational & the 9’s Rule', std='NC.8.NS.1',
+ dict(title='A. Rational vs. Irrational & the 9’s Rule', std='NC.8.NS.1', keys=['neg', 'frac'],
   hint='Rational = can be a fraction (whole numbers, decimals that end or repeat, √ of a perfect square). Irrational = never ends AND never repeats (π, √2, √20). Repeating decimal → the repeating digits over 9s.',
   intro=box('A number is <b>rational</b> if it can be written as a fraction. Decimals that stop or repeat are rational. √ of a perfect square (√49 = 7) is rational. A number is <b>irrational</b> if the decimal never ends and never repeats: π, √2, √20.',
             'The 9’s rule: 0.363636… → the repeating part is 36 (two digits), so write ' + fr(36, 99) + ' = ' + fr(4, 11) + '.',
@@ -59,23 +67,23 @@ SECS = [
         why={'Yes. A decimal that never ends is always irrational.': 'Never ending is not enough. Irrational means it never ends AND never repeats. This one repeats 12.',
              'Yes. It cannot be written as a fraction.': 'Use the 9’s rule: 12/99. It can be a fraction.',
              'No. It is rational because it is less than 1.': 'Size does not decide it. π − 3 is less than 1 and is irrational. It is rational because it repeats.'})]),
- dict(title='B. Exponent Rules (zero and negative exponents)', std='NC.8.EE.1',
+ dict(title='B. Exponent Rules (zero and negative exponents)', std='NC.8.EE.1', keys=['neg', 'frac', 'exp'],
   hint='Same base: multiply → add the exponents, divide → subtract. Power of a power → multiply. Anything (not 0) to the 0 power is 1. A negative exponent means flip: 2⁻⁴ = 1/2⁴.',
   intro=box('Same base: <b>multiply → add</b> exponents, <b>divide → subtract</b>. Power of a power → <b>multiply</b>. <b>a⁰ = 1</b>. A <b>negative exponent flips</b> the number: 2⁻⁴ = ' + fr(1, '2⁴') + ' = ' + fr(1, 16) + '. It does NOT make the answer negative.',
             '3⁵ · 3⁻³ = 3⁵⁺⁽⁻³⁾ = 3² = 9.',
             '“Select all the expressions equal to 1/16” and “Find the value of (power, product and zero exponent).” Nobody got these right on our Check-In, so this section matters most.',
             'Exponential functions like y = 2ˣ use these rules every day.', sbl(2)),
   probs=[
-   dict(n=1, q='Find the value: 2³ · 2²', ans='32', lv=3),
+   dict(n=1, q='Find the value: 2³ · 2²', ans='32', lv=3, sw='2³ · 2²'),
    dict(n=2, q='Find the value: 7⁰', ans='1', lv=3),
-   dict(n=3, q='Find the value: 2⁻⁴ (type a fraction like 1/9)', ans=fr(1, 16), lv=3),
-   dict(n=4, q='Find the value: 5⁸ ÷ 5⁶', ans='25', lv=4),
-   dict(n=5, q='Find the value: (3²)³ ÷ 3⁴', ans='9', lv=4),
+   dict(n=3, q='Find the value: 2⁻⁴ (type a fraction like 1/9)', ans=fr(1, 16), lv=3, sw='2⁻⁴'),
+   dict(n=4, q='Find the value: 5⁸ ÷ 5⁶', ans='25', lv=4, sw='5⁸ ÷ 5⁶'),
+   dict(n=5, q='Find the value: (3²)³ ÷ 3⁴', ans='9', lv=4, sw='(3²)³ ÷ 3⁴'),
    dict(n=6, q='Which expression is equal to ' + fr(1, 16) + '?', ans='2⁻⁴', lv=4, choices=['2⁻⁴', '−2⁴', '4⁻¹', '2⁴ · 2⁰'],
         why={'−2⁴': '−2⁴ = −16. A negative exponent flips the number; it does not make it negative.', '4⁻¹': '4⁻¹ = 1/4, not 1/16. You need 4⁻² or 2⁻⁴.', '2⁴ · 2⁰': '2⁴ · 2⁰ = 16 · 1 = 16. The zero power is 1, so nothing flips.'}),
    dict(n=7, q='Simplify: x⁵ · x⁻² (positive exponents only)', ans='x³', lv=5, choices=['x³', 'x⁻¹⁰', 'x⁷', fr(1, 'x³')],
         why={'x⁻¹⁰': 'You multiplied the exponents. When you multiply with the same base, ADD them: 5 + (−2) = 3.', 'x⁷': '5 + (−2) is 3, not 7. Adding a negative is like subtracting.', fr(1, 'x³'): 'The exponent is +3, so nothing flips: the answer is x³.'})]),
- dict(title='C. Scientific Notation', std='NC.8.EE.4',
+ dict(title='C. Scientific Notation', std='NC.8.EE.4', keys=['neg', 'frac'],
   hint='a × 10ⁿ with 1 ≤ a < 10. Multiply: multiply the front numbers, ADD the exponents. Divide: divide the front numbers, SUBTRACT the exponents. Then fix the front number so it is from 1 to 10.',
   intro=box('Scientific notation is <b>a × 10ⁿ</b> with 1 ≤ a &lt; 10. <b>Multiply:</b> multiply the front numbers, add the exponents. <b>Divide:</b> divide the front numbers, subtract the exponents. <b>Fix it</b> if the front number is 10 or more.',
             '(5 × 10³)(4 × 10²) = 20 × 10⁵ → 2 × 10⁶ (move the decimal one place, add 1 to the exponent).',
@@ -88,7 +96,7 @@ SECS = [
    dict(n=4, q='Divide: (8 × 10⁹) ÷ (2 × 10³)', ans='4 × 10⁶', lv=4),
    dict(n=5, q='Multiply and write in scientific notation: (5 × 10³)(4 × 10²)', ans='2 × 10⁶', lv=4),
    dict(n=6, q='The sun is about 1.5 × 10⁸ km from Earth. The moon is about 3.75 × 10⁵ km from Earth. About how many times farther away is the sun?', ans='400', lv=5)]),
- dict(title='D. Equations: Distribute and Variables on Both Sides', std='NC.8.EE.7',
+ dict(title='D. Equations: Distribute and Variables on Both Sides', std='NC.8.EE.7', keys=['neg', 'frac'],
   hint='1) Distribute. 2) Combine like terms on each side. 3) Move the x-terms to one side. 4) Move the numbers to the other side. 5) Divide.',
   intro=box('Follow the same order every time: <b>distribute → combine like terms → x’s to one side → numbers to the other side → divide</b>. Whatever you do to one side, do to the other side.',
             '3(x − 2) = x + 8 → 3x − 6 = x + 8 → 2x − 6 = 8 → 2x = 14 → x = 7.',
@@ -114,7 +122,7 @@ SECS = [
    dict(n=4, q='How many solutions? 3(x − 1) + 2 = 3x − 1', ans='infinitely many solutions', lv=4),
    dict(n=5, q='Which equation has NO solution?', ans='6x + 4 = 2(3x + 5)', lv=5, choices=['6x + 4 = 2(3x + 2)', '6x + 4 = 2(3x + 5)', '6x + 4 = 3(2x) + 4', '6x + 4 = 4x + 4'],
         why={'6x + 4 = 2(3x + 2)': 'Distribute: 6x + 4 = 6x + 4. That is always true, so infinitely many solutions.', '6x + 4 = 3(2x) + 4': '3(2x) + 4 = 6x + 4, the same as the left side: infinitely many solutions.', '6x + 4 = 4x + 4': 'The x-terms are different, so you get 2x = 0 and x = 0: one solution.'})]),
- dict(title='F. Inequalities: When to Flip the Sign', std='NC.8.EE.7',
+ dict(title='F. Inequalities: When to Flip the Sign', std='NC.8.EE.7', keys=['neg', 'frac'],
   hint='Solve like an equation. If you multiply or divide BOTH sides by a negative number, flip the sign (< becomes >).',
   intro=box('Solve an inequality like an equation. <b>Only</b> when you multiply or divide by a <b>negative</b> number, <b>flip</b> the sign. Adding or subtracting a negative never flips it.',
             '−2x + 5 &gt; 11 → −2x &gt; 6 → divide by −2 and flip → x &lt; −3.',
@@ -129,20 +137,20 @@ SECS = [
         choices=['He divided by −5 but did not flip the sign. It should be x ≥ −4.', 'He should have subtracted 5 instead of dividing.', 'There is no mistake. x ≤ −4 is right.', 'He should have flipped it to x ≤ 4.'],
         why={'He should have subtracted 5 instead of dividing.': '−5x means −5 times x, so you undo it by dividing by −5.', 'There is no mistake. x ≤ −4 is right.': 'Test x = −5 (it fits x ≤ −4): −5(−5) = 25, and 25 ≤ 20 is false. So x ≤ −4 is wrong.', 'He should have flipped it to x ≤ 4.': '20 ÷ (−5) is −4, not 4. Flip only the sign: x ≥ −4.'}),
    dict(n=6, q='Jordan has $25. Snacks cost $3 each and there is a $1 fee for the order. What is the greatest number of snacks Jordan can buy?', ans='8', lv=5)]),
- dict(title='G. Angles: Parallel Lines and Triangles', std='NC.8.G.5',
+ dict(title='G. Angles: Parallel Lines and Triangles', std='NC.8.G.5', keys=['neg'],
   hint='Vertical angles are equal. A linear pair adds to 180°. With parallel lines: corresponding, alternate interior and alternate exterior angles are equal; same-side interior angles add to 180°. A triangle’s angles add to 180°. An exterior angle = the two far inside angles added.',
   intro=box('<b>Equal:</b> vertical angles, corresponding, alternate interior, alternate exterior. <b>Add to 180°:</b> a linear pair, same-side interior angles, the three angles of a triangle. <b>Exterior angle</b> of a triangle = the two far (remote) inside angles added.',
             'Alternate interior angles (3x + 15)° and 75° are equal: 3x + 15 = 75 → 3x = 60 → x = 20.',
             '“Find x” with angle expressions, then find the angle. Pick EQUAL or ADD TO 180 first, then write the equation.',
             'Geometry proofs in Math 1 and beyond use these angle facts.', sbl(4)),
   probs=[
-   dict(n=1, q='Two angles are vertical angles. One is 64°. What is the other angle, in degrees?', ans='64', lv=3),
-   dict(n=2, q='Two angles form a linear pair. One is 112°. What is the other angle, in degrees?', ans='68', lv=3),
-   dict(n=3, q='Two parallel lines are cut by a transversal. Alternate interior angles are (3x + 15)° and 75°. Find x.', ans='20', lv=4),
-   dict(n=4, q='Two parallel lines are cut by a transversal. Same-side interior angles are (2x + 10)° and (3x + 20)°. Find x.', ans='30', lv=4),
-   dict(n=5, q='The angles of a triangle are x°, 2x° and 3x°. Find x.', ans='30', lv=4),
-   dict(n=6, q='An exterior angle of a triangle is (5x − 10)°. The two far inside angles are 40° and (2x + 10)°. Find the exterior angle, in degrees.', ans='90', lv=5),
-   dict(n=7, q='Two parallel lines are cut by a transversal. Two angles are in the same spot at each crossing (both upper right). What kind of pair are they?', ans='Corresponding angles', lv=4,
+   dict(n=1, q='Two angles are vertical angles. One is 64°. What is the other angle, in degrees?', ans='64', lv=3, **fig('WB_G1')),
+   dict(n=2, q='Two angles form a linear pair. One is 112°. What is the other angle, in degrees?', ans='68', lv=3, **fig('WB_G2')),
+   dict(n=3, q='Two parallel lines are cut by a transversal. Alternate interior angles are (3x + 15)° and 75°. Find x.', ans='20', lv=4, **fig('WB_G3')),
+   dict(n=4, q='Two parallel lines are cut by a transversal. Same-side interior angles are (2x + 10)° and (3x + 20)°. Find x.', ans='30', lv=4, **fig('WB_G4')),
+   dict(n=5, q='The angles of a triangle are x°, 2x° and 3x°. Find x.', ans='30', lv=4, **fig('WB_G5')),
+   dict(n=6, q='An exterior angle of a triangle is (5x − 10)°. The two far inside angles are 40° and (2x + 10)°. Find the exterior angle, in degrees.', ans='90', lv=5, then='5x - 10', **fig('WB_G6')),   # then: the answer is this angle; x solves 5x - 10 = 90 in the workspace
+   dict(n=7, q='Two parallel lines are cut by a transversal. Two angles are in the same spot at each crossing (both upper right). What kind of pair are they?', ans='Corresponding angles', lv=4, **fig('WB_G7'),
         choices=['Corresponding angles', 'Alternate interior angles', 'Vertical angles', 'Same-side interior angles'],
         why={'Alternate interior angles': 'Alternate interior angles are between the parallel lines on opposite sides of the transversal, not in the same spot.', 'Vertical angles': 'Vertical angles are across from each other at ONE crossing, not at two different crossings.', 'Same-side interior angles': 'Same-side interior angles are both between the parallel lines on the same side, and they add to 180°.'})]),
 ]
@@ -199,8 +207,10 @@ def page(fn, title, sub, secs, label, intro, pdf):
 </div>
 <div class="site-footer">© Mr. Allen's Math Class</div>
 <script>window.PRACTICE = {json.dumps(P, ensure_ascii=False)};</script>
+<script>window.SW_KEYS = 'always';</script>
 <script src="tap-answers.js?v=20261111a"></script>
 <script src="practice/practice-engine.js?v={V}"></script>
+<script src="math-keys.js?v={V}"></script>
 <script src="../tracker-config.js"></script>
 <script src="../score-send.js?v=20261117a"></script>
 <script> ScoreSend.setup({{ kind:'practice', unit:'WB', page:'{label}', mount:'#ss-mount', std:'NC.8.EE.7', band:3 }}); </script>

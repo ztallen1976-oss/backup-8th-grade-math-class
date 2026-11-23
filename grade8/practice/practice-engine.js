@@ -169,6 +169,7 @@
       card.querySelector('.pr-show').hidden = true;
     } else {
       var TA = window.TapAnswers, wy = !TA ? '' : tap ? (TA.why(tap.list, v) || TA.miss(p.ans, p.q)) : TA.numWhy(v, p.ans, p.q);   // name the mistake
+      if (!tap && /find the value/i.test(stripHtml(p.q)) && /\^|[⁰¹²³⁴⁵⁶⁷⁸⁹]/.test(v)) wy = 'That is a power, not its value. Multiply it out until you have one number (2³ means 2 · 2 · 2 = 8).';   // typed 2^5 on a "Find the value" problem (math keys, Nov 23, 2026)
       if (tries === 1 && wy) { var at = String(p.ans).replace(/<sup>([^<]*)<\/sup>/g, function (_, e) { return e.replace(/[0-9−-]/g, function (c) { return '⁰¹²³⁴⁵⁶⁷⁸⁹'.charAt('0123456789'.indexOf(c)) || '⁻'; }); }).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); if (at.length > 1 && wy.indexOf(at) >= 0) wy = wy.split(at).join('?'); }   // the first note does not give the answer
       var seen = (card.dataset.seen || '').split('\u0001'), vk = v.replace(/\s+/g, ''), again = seen.indexOf(vk) >= 0; if (!again) card.dataset.seen = seen.concat([vk]).join('\u0001');
       var hbx = card.querySelector('.pr-hintbox'), opened = false; if (tries >= 2 && hbx && hbx.hidden) { hbx.hidden = false; opened = true; }   // no loops: the 2nd miss opens the hint
@@ -185,8 +186,8 @@
   // step-by-step workspace (pick a move, write the next line, instant feedback) for equations, inequalities,
   // word problems (Unit 3) and angle problems (Unit 4); see ../step-work.js
   if (!window.StepWork) {
-    var ft = document.createElement('script'); ft.src = (ENGINE_SRC || '').replace(/practice-engine\.js.*$/, 'figtext.js?v=20261112a'); document.body.appendChild(ft);   // labels inside the pictures
-    var sw = document.createElement('script'); sw.src = (ENGINE_SRC || '').replace(/practice\/practice-engine\.js.*$/, 'step-work.js?v=20261113e'); document.body.appendChild(sw);
+    var ft = document.createElement('script'); ft.src = (ENGINE_SRC || '').replace(/practice-engine\.js.*$/, 'figtext.js?v=20261123a'); document.body.appendChild(ft);   // labels inside the pictures
+    var sw = document.createElement('script'); sw.src = (ENGINE_SRC || '').replace(/practice\/practice-engine\.js.*$/, 'step-work.js?v=20261123a'); document.body.appendChild(sw);
   } else window.StepWork.auto();
   // one problem at a time, with Back / Next (see ../one-at-a-time.js)
   if (!window.__oat) { var oat = document.createElement('script'); oat.src = (ENGINE_SRC || '').replace(/practice\/practice-engine\.js.*$/, 'one-at-a-time.js?v=20261113b'); document.body.appendChild(oat); }

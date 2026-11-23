@@ -76,7 +76,7 @@ def notes_page(mod):
     h.append('<script src="g7-notes.js?v=%s"></script>\n<script src="../vwork.js?v=20261112a"></script>\n<script src="../grade8/tap-answers.js?v=20261112b"></script>\n'
              '<script src="../notes-practice.js?v=%s"></script>\n<script src="../paper.js?v=20261112a"></script>\n<script src="../tracker-config.js"></script>\n<script src="../score-send.js?v=20261117a"></script>\n' % (V, V))
     h.append("<script>if(window.ScoreSend) ScoreSend.setup({ kind:'practice', unit:'7-%d', page:'Grade 7 · Unit %d · Guided Notes practice', mount:'#ss-mount', std:'%s', band:3 });</script>\n" % (n, n, U['stds'][0][0]))
-    h.append('<script src="../notes-flow.js?v=20261112a"></script>\n<script src="../grade8/step-work.js?v=20261113e"></script><script src="../notes-steps.js?v=20261112a"></script>\n</body>\n</html>\n')
+    h.append('<script src="../notes-flow.js?v=20261112a"></script>\n<script src="../grade8/step-work.js?v=20261123a"></script><script src="../notes-steps.js?v=20261112a"></script>\n</body>\n</html>\n')
     write('unit%d-notes.html' % n, ''.join(h))
     return sum(len(t['np']) for t in T) + sum(len(x[2]) for x in P2)
 

@@ -9,7 +9,7 @@ const G = path.join(__dirname, '..', '..', 'grade8') + '/';
 const JOBS = [['winter-break-review.html', 'winter-review/Winter_Break_Review'], ['winter-break-review-v2.html', 'winter-review/Winter_Break_Review_Version2']];
 (async () => {
   require('fs').mkdirSync(G + 'winter-review', { recursive: true });
-  const b = await chromium.launch();
+  const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome' });
   for (const [page, base] of JOBS) for (const mode of ['blank', 'key']) {
     const out = base + (mode === 'key' ? '_AnswerKey.pdf' : '.pdf');
     const p = await b.newPage({ viewport: { width: 900, height: 1200 } }); const errs = []; p.on('pageerror', e => errs.push(e.message));
@@ -18,7 +18,7 @@ const JOBS = [['winter-break-review.html', 'winter-review/Winter_Break_Review'],
     const info = await p.evaluate((mode) => {
       const D = window.PRACTICE.data, L = 'ABCDEF', norm = t => String(t).replace(/<[^>]+>/g, '').replace(/\s+/g, '').toLowerCase();
       const strip = h => String(h).replace(/<[^>]+>/g, '');
-      document.querySelectorAll('#site-bar,#side-nav,#side-nav-pad,#top-ticker,.site-bar,.sb-local,#ss-mount,#scoresend,.pr-how,.pr-score,.pr-links,.oat-bar,.oat-nav,.oat-finish,.ineq-keys,.back-link,.sw-host,.pr-tips,.site-footer,.fx-read,.fx-foot,.fx-tpanel,.fx-help,.fx-streak,.fx-toast,.fx-fin,.fx-gate,.oat-hint,.ta-why,.ta-wrap,.ta-choices,.svw-bar,#svw-bar,.save-bar,#save-bar,.pr-progress').forEach(e => e.remove());
+      document.querySelectorAll('#site-bar,#side-nav,#side-nav-pad,#top-ticker,.site-bar,.sb-local,#ss-mount,#scoresend,.pr-how,.pr-score,.pr-links,.oat-bar,.oat-nav,.oat-finish,.ineq-keys,.ik-row,.mk-row,.back-link,.sw-host,.pr-tips,.site-footer,.fx-read,.fx-foot,.fx-tpanel,.fx-help,.fx-streak,.fx-toast,.fx-fin,.fx-gate,.oat-hint,.ta-why,.ta-wrap,.ta-choices,.svw-bar,#svw-bar,.save-bar,#save-bar,.pr-progress').forEach(e => e.remove());
       document.querySelectorAll('[class*="oat"]').forEach(e => { if (e !== document.body && !e.matches('.pr-sec,h1,h2,.page-wrap,.pr-sub,p') && !e.closest('.pr-card') && !e.querySelector('.pr-card')) e.style.display = 'none'; });
       document.querySelectorAll('html > div, body > div').forEach(e => { if (!e.querySelector('#practice') && e.id !== 'practice' && !e.classList.contains('page-wrap')) e.remove(); });
       // paper look: white page, full width, tighter cards
