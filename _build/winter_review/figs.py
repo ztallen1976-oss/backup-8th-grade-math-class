@@ -24,7 +24,7 @@ def save(fig, name):
     fig.savefig(os.path.join(OUT, name), dpi=200); plt.close(fig)
 
 
-def arc_label(ax, cx, cy, a0, a1, txt, col, r=0.55, rr=None, fs=13, place=None):
+def arc_label(ax, cx, cy, a0, a1, txt, col, r=0.55, rr=None, fs=16, place=None):
     """an arc from angle a0 to a1 (degrees, counter-clockwise) with its label just outside the arc"""
     ax.add_patch(Arc((cx, cy), 2 * r, 2 * r, theta1=a0, theta2=a1, color=col, lw=2))
     mid = math.radians((a0 + a1) / 2)
@@ -79,8 +79,8 @@ def parallel(name, theta, labels, mark_only=None):
         cx, cy = P[where]; a0, a1 = span[slot]
         long = len(txt) > 4
         rr = (1.35 if long else 0.95) if (a1 - a0) > 60 else (1.55 if long else 1.15)
-        arc_label(ax, cx, cy, a0, a1, txt, col, r=0.5, rr=rr, fs=11 if long else 12)
-    ax.set_xlim(-4.4, 4.4); ax.set_ylim(-2.95, 2.95); save(fig, name)
+        arc_label(ax, cx, cy, a0, a1, txt, col, r=0.5, rr=rr, fs=14 if long else 16)
+    ax.set_xlim(-4.6, 4.6); ax.set_ylim(-2.95, 2.95); save(fig, name)
 
 
 # ---- G5: a triangle with angles A, B, C (degrees) drawn to scale; labels at each corner ----
@@ -101,8 +101,8 @@ def triangle(name, A, B, labs, cols, ext=None, place=None):
     def corner(cx, cy, a0, a1, txt, col, deg, key):
         if not txt: return                                   # an unlabeled corner gets no arc (nothing to hint at its size)
         long = len(txt) > 4
-        rr = (1.25 if long else 1.0) if deg > 50 else (1.75 if long else 1.35)
-        arc_label(ax, cx, cy, a0, a1, txt, col, r=0.55, rr=rr, fs=11 if long else 12, place=(place or {}).get(key))
+        rr = (1.2 if long else 1.0) if deg > 80 else (1.6 if long else 1.5) if deg > 50 else (1.75 if long else 1.7)   # labels sit clear of the sides
+        arc_label(ax, cx, cy, a0, a1, txt, col, r=0.55, rr=rr, fs=14 if long else 16, place=(place or {}).get(key))
     corner(0, 0, 0, A, labs[0], cols[0], A, 'left')
     # right corner: from the side toward the top (180 - B) to the base (180)
     corner(base, 0, 180 - B, 180, labs[1], cols[1], B, 'right')
@@ -114,8 +114,8 @@ def triangle(name, A, B, labs, cols, ext=None, place=None):
     xmax = base + 0.6
     if ext:
         ax.plot([base, base + 2.2], [0, 0], color=NAVY, lw=2.4, linestyle=(0, (4, 3)))
-        arc_label(ax, base, 0, 0, 180 - B, ext[0], ext[1], r=0.8, rr=1.5, fs=11)
-        xmax = base + 2.3
+        arc_label(ax, base, 0, 0, 180 - B, ext[0], ext[1], r=0.8, rr=1.5, fs=14)
+        xmax = base + 3.1
     ax.set_xlim(-1.0, xmax + 0.3); ax.set_ylim(-0.7, max(top[1], 1.2) + 0.8); save(fig, name)
 
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # G5: x°, 2x°, 3x° → 30, 60, 90 (to scale; no right-angle mark, that would give x away)
     triangle('WB_G5.png', 30, 60, ('x°', '2x°', '3x°'), (RED, GOLD, BLUE))
     # G6: exterior angle (5x − 10)° at the right corner; far inside angles 40° (left) and (2x + 10)° (top): x = 20 → 40, 50, 90
-    triangle('WB_G6.png', 40, 90, ('40°', '', '(2x + 10)°'), (GOLD, NAVY, BLUE), ext=('(5x − 10)°', RED), place={'top': dict(dx=-1.15, dy=-1.9, ha='center', va='top')})
+    triangle('WB_G6.png', 40, 90, ('40°', '', '(2x + 10)°'), (GOLD, NAVY, BLUE), ext=('(5x − 10)°', RED), place={'top': dict(dx=-1.35, dy=-2.35, ha='center', va='top')})
     # G7: corresponding angles, both upper right (no numbers; the student names the pair)
     parallel('WB_G7.png', 60, {('top', 'UR'): ('1', GOLD), ('bot', 'UR'): ('2', GOLD)})
     import json; print(json.dumps(SIZES))

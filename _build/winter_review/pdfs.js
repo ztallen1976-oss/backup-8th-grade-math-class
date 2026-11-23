@@ -24,7 +24,8 @@ const JOBS = [['winter-break-review.html', 'winter-review/Winter_Break_Review'],
       // paper look: white page, full width, tighter cards
       document.head.insertAdjacentHTML('beforeend', '<style>html,body{background:#fff!important}.page-wrap,#practice{max-width:none!important;margin:0!important;padding:0!important;background:#fff!important;box-shadow:none!important}' +
         '.pr-card{padding:8px 12px!important;margin:0 0 8px!important;box-shadow:none!important;border:1px solid #D5DAE3!important}.pr-sec{margin:12px 0 8px!important}.wb-box{margin:0 0 8px!important;padding:6px 12px!important}.wb-box p{margin:4px 0!important}' +
-        '.pr-hd,.pr-head{margin-bottom:2px!important}hr{margin:8px 0!important}</style>');
+        '.pr-hd,.pr-head{margin-bottom:2px!important}hr{margin:8px 0!important}' +
+        '.pr-fig{width:auto!important;height:auto!important;max-width:225px!important;max-height:140px!important;margin:4px auto!important}</style>');   // pictures print smaller than on screen (Zach, Nov 23, 2026)
       // Nov 17, 2026 (Zach): the PDFs keep ONLY the problems and room for work: no Quick review boxes, no intro text
       document.querySelectorAll('.wb-box,.wb-top,.wb-print,.hero > p').forEach(e => e.remove());
       // top paragraph: the paper version
